@@ -1,36 +1,80 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# 🕵️ UniFind - Campus Lost & Found Portal
 
-## Getting Started
+UniFind is a premium, high-fidelity web platform designed to streamline the process of finding and returning lost items within university campuses. Featuring a modern glassmorphic design, smooth Framed Motion animations, and an interactive detective mascot, UniFind makes campus security and item recovery engaging and efficient.
 
-First, run the development server:
+## ✨ Key Features
 
-```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
-```
+- **Interactive Branding**: A custom-animated "Investigator" mascot that scans the landing page for lost items.
+- **Role-Based Access**: Specialized dashboards for Students, Campus Admins, and Super Admins.
+- **Real-time Tracking**: Dynamic item status management (Lost, Found, Claimed, Returned).
+- **Premium UI/UX**:
+  - Glassmorphic login portals with interactive character reactions.
+  - Staggered typography animations.
+  - Responsive layouts for mobile and desktop.
+- **Secure Authentication**: Integrated with Google OAuth and JWT-based secure sessions.
+- **Accessibility Ready**: Built with ARIA standards and keyboard-friendly interactions.
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+## 🛠️ Tech Stack
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+- **Framework**: [Next.js 16](https://nextjs.org/) (App Router)
+- **Animations**: [Framer Motion](https://www.framer.com/motion/)
+- **Styling**: [Tailwind CSS](https://tailwindcss.com/)
+- **Database**: Prisma with SQLite/LibSQL
+- **Authentication**: JWT & Google OAuth 2.0
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+## 🚀 Getting Started
 
-## Learn More
+### Prerequisites
 
-To learn more about Next.js, take a look at the following resources:
+- Node.js 18+ 
+- npm or yarn
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+### Installation
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+1. **Clone the repository**:
+   ```bash
+   git clone https://github.com/2420090149-klh/UniFind.git
+   cd UniFind
+   ```
 
-## Deploy on Vercel
+2. **Install dependencies**:
+   ```bash
+   npm install
+   ```
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+3. **Set up Environment Variables**:
+   Create a `.env` file in the root directory and add:
+   ```env
+   DATABASE_URL="file:./dev.db"
+   JWT_SECRET="your_secret_key"
+   NEXT_PUBLIC_GOOGLE_CLIENT_ID="your_google_client_id"
+   ```
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+4. **Initialize the Database**:
+   ```bash
+   npx prisma generate
+   npx prisma db push
+   npm run seed
+   ```
+
+5. **Run the Development Server**:
+   ```bash
+   npm run dev
+   ```
+
+Visit [http://localhost:3000](http://localhost:3000) to view the application.
+
+## 📂 Project Structure
+
+- `/app`: Next.js App Router (Pages & API Routes)
+- `/components`: Reusable UI components
+- `/prisma`: Database schema and seed scripts
+- `/public`: Static assets (Logos, Campus imagery)
+- `/lib`: Shared utilities and authentication logic
+
+## 📄 License
+
+This project is developed for campus community support.
+
+---
+*Developed with ❤️ for KLHB Campus.*
