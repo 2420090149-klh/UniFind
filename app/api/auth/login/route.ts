@@ -1,5 +1,5 @@
 import { NextResponse } from 'next/server';
-import db from '@/lib/db';
+import { prisma } from '@/lib/db';
 import bcrypt from 'bcryptjs';
 import jwt from 'jsonwebtoken';
 
@@ -13,12 +13,16 @@ export async function POST(req: Request) {
             return NextResponse.json({ error: 'Missing credentials' }, { status: 400 });
         }
 
-        const college = db.prepare('SELECT * FROM College WHERE subdomain = ?').get(subdomain) as any;
+        const college = await prisma.college.findUnique({
+            where: { subdomain }
+        });
         if (!college) {
             return NextResponse.json({ error: 'Invalid college domain' }, { status: 404 });
         }
 
-        const user = db.prepare('SELECT * FROM User WHERE email = ? AND collegeId = ?').get(email, college.id) as any;
+        const user = await prisma.user.findFirst({
+            where: { email, collegeId: college.id }
+        });
         if (!user) {
             return NextResponse.json({ error: 'User not found' }, { status: 404 });
         }

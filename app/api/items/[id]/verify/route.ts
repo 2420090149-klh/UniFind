@@ -1,17 +1,19 @@
 import { NextResponse } from 'next/server';
-import db from '@/lib/db';
+import { prisma } from '@/lib/db';
 import { getUserFromRequest } from '@/lib/auth';
 
 export async function POST(req: Request, props: { params: Promise<{ id: string }> }) {
     try {
-        const params = await props.params;
+        const { id } = await props.params;
         const user = await getUserFromRequest();
+        
         if (!user || user.role !== 'ADMIN') {
             return NextResponse.json({ error: 'Unauthorized: Admin only' }, { status: 403 });
         }
 
-        const { id } = params;
-        const item = db.prepare('SELECT * FROM Item WHERE id = ?').get(id) as any;
+        const item = await prisma.item.findUnique({
+            where: { id }
+        });
 
         if (!item) {
             return NextResponse.json({ error: 'Item not found' }, { status: 404 });
@@ -22,15 +24,17 @@ export async function POST(req: Request, props: { params: Promise<{ id: string }
         }
 
         if (item.status !== 'CLAIMED') {
-            return NextResponse.json({ error: 'Item must be claimed first' }, { status: 400 });
+            return NextResponse.json({ error: 'Item must be claimed first before verification' }, { status: 400 });
         }
 
-        const now = new Date().toISOString();
-        db.prepare('UPDATE Item SET status = ?, updatedAt = ? WHERE id = ?').run(
-            'HANDED_OVER', now, id
-        );
+        await prisma.item.update({
+            where: { id },
+            data: { 
+                status: 'HANDED_OVER'
+            }
+        });
 
-        return NextResponse.json({ message: 'Item marked as handed over' });
+        return NextResponse.json({ message: 'Item marked as handed over successfully' });
     } catch (error) {
         console.error('Verify item error:', error);
         return NextResponse.json({ error: 'Internal server error' }, { status: 500 });

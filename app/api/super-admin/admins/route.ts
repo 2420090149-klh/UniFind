@@ -1,19 +1,35 @@
 import { NextResponse } from 'next/server';
-import db from '@/lib/db';
+import { prisma } from '@/lib/db';
 import bcrypt from 'bcryptjs';
 import { getUserFromRequest } from '@/lib/auth';
+import crypto from 'crypto';
 
-export async function GET(req: Request) {
+export async function GET() {
     try {
         const user = await getUserFromRequest();
         if (!user || user.role !== 'SUPER_ADMIN') {
             return NextResponse.json({ error: 'Unauthorized' }, { status: 403 });
         }
 
-        // Get all admins for the college
-        const admins = db.prepare('SELECT id, email, name, role, permissions FROM User WHERE role = ? AND collegeId = ?').all('ADMIN', user.collegeId);
+        const admins = await prisma.user.findMany({
+            where: {
+                role: 'ADMIN',
+                collegeId: user.collegeId
+            },
+            select: {
+                id: true,
+                email: true,
+                name: true,
+                role: true,
+                permissions: true,
+                createdAt: true
+            },
+            orderBy: { createdAt: 'desc' }
+        });
+
         return NextResponse.json({ admins });
-    } catch (e) {
+    } catch (error) {
+        console.error('Get admins error:', error);
         return NextResponse.json({ error: 'Failed to fetch admins' }, { status: 500 });
     }
 }
@@ -30,17 +46,32 @@ export async function POST(req: Request) {
             return NextResponse.json({ error: 'Missing fields' }, { status: 400 });
         }
 
+        const existingAdmin = await prisma.user.findUnique({
+            where: { email }
+        });
+
+        if (existingAdmin) {
+            return NextResponse.json({ error: 'Email already exists' }, { status: 409 });
+        }
+
         const hashedPassword = await bcrypt.hash(password, 10);
         const newAdminId = crypto.randomUUID();
 
-        db.prepare('INSERT INTO User (id, email, password, name, role, permissions, collegeId, createdAt) VALUES (?, ?, ?, ?, ?, ?, ?, ?)')
-            .run(newAdminId, email, hashedPassword, name, 'ADMIN', permissions || '', user.collegeId, new Date().toISOString());
+        await prisma.user.create({
+            data: {
+                id: newAdminId,
+                email,
+                password: hashedPassword,
+                name,
+                role: 'ADMIN',
+                permissions: permissions || '',
+                collegeId: user.collegeId
+            }
+        });
 
         return NextResponse.json({ success: true });
-    } catch (e: any) {
-        if (e.code === 'SQLITE_CONSTRAINT_UNIQUE') {
-            return NextResponse.json({ error: 'Email already exists' }, { status: 409 });
-        }
+    } catch (error) {
+        console.error('Create admin error:', error);
         return NextResponse.json({ error: 'Failed to create admin' }, { status: 500 });
     }
 }

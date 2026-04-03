@@ -1,46 +1,61 @@
 import { NextResponse } from 'next/server';
-import db from '@/lib/db';
+import { prisma } from '@/lib/db';
 import { getUserFromRequest } from '@/lib/auth';
 
 export async function GET(req: Request, props: { params: Promise<{ id: string }> }) {
     try {
-        const params = await props.params;
-        const { id } = params;
-        const item = db.prepare('SELECT * FROM Item WHERE id = ?').get(id) as any;
-        if (!item) return NextResponse.json({ error: 'Item not found' }, { status: 404 });
+        const { id } = await props.params;
 
-        let finder = null;
-        if (item.finderId) finder = db.prepare('SELECT id, name, email FROM User WHERE id = ?').get(item.finderId) as any;
+        const item = await prisma.item.findUnique({
+            where: { id },
+            include: {
+                finder: {
+                    select: { id: true, name: true, email: true }
+                },
+                owner: {
+                    select: { id: true, name: true, email: true }
+                },
+                college: {
+                    select: { id: true, name: true, subdomain: true }
+                }
+            }
+        });
 
-        let owner = null;
-        if (item.ownerId) owner = db.prepare('SELECT id, name, email FROM User WHERE id = ?').get(item.ownerId) as any;
+        if (!item) {
+            return NextResponse.json({ error: 'Item not found' }, { status: 404 });
+        }
 
-        return NextResponse.json({ item, finder, owner });
+        return NextResponse.json({ 
+            item, 
+            finder: item.finder, 
+            owner: item.owner 
+        });
     } catch (error) {
         console.error('Get item detail error:', error);
         return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
     }
 }
 
-// Admin/SuperAdmin: change item status manually (e.g. mark as CLAIMED for walk-in, or revert)
 export async function PATCH(req: Request, props: { params: Promise<{ id: string }> }) {
     try {
-        const params = await props.params;
+        const { id } = await props.params;
         const user = await getUserFromRequest();
+        
         if (!user || !['ADMIN', 'SUPER_ADMIN'].includes(user.role)) {
             return NextResponse.json({ error: 'Forbidden' }, { status: 403 });
         }
 
-        const { id } = params;
         const { status } = await req.json();
 
-        const allowed = ['REPORTED', 'CLAIMED', 'HANDED_OVER', 'RECEIVED'];
+        const allowed = ['REPORTED', 'CLAIMED', 'HANDED_OVER', 'RECEIVED', 'APPROVED', 'RETURNED'];
         if (!allowed.includes(status)) {
             return NextResponse.json({ error: 'Invalid status' }, { status: 400 });
         }
 
-        const now = new Date().toISOString();
-        db.prepare('UPDATE Item SET status = ?, updatedAt = ? WHERE id = ?').run(status, now, id);
+        await prisma.item.update({
+            where: { id },
+            data: { status }
+        });
 
         return NextResponse.json({ message: 'Status updated successfully' });
     } catch (error) {
@@ -49,20 +64,28 @@ export async function PATCH(req: Request, props: { params: Promise<{ id: string 
     }
 }
 
-// Admin/SuperAdmin: delete an item
 export async function DELETE(req: Request, props: { params: Promise<{ id: string }> }) {
     try {
-        const params = await props.params;
+        const { id } = await props.params;
         const user = await getUserFromRequest();
+        
         if (!user || !['ADMIN', 'SUPER_ADMIN'].includes(user.role)) {
             return NextResponse.json({ error: 'Forbidden' }, { status: 403 });
         }
 
-        const { id } = params;
-        const item = db.prepare('SELECT id FROM Item WHERE id = ?').get(id) as any;
-        if (!item) return NextResponse.json({ error: 'Item not found' }, { status: 404 });
+        const item = await prisma.item.findUnique({
+            where: { id },
+            select: { id: true }
+        });
 
-        db.prepare('DELETE FROM Item WHERE id = ?').run(id);
+        if (!item) {
+            return NextResponse.json({ error: 'Item not found' }, { status: 404 });
+        }
+
+        await prisma.item.delete({
+            where: { id }
+        });
+
         return NextResponse.json({ message: 'Item deleted successfully' });
     } catch (error) {
         console.error('Delete item error:', error);

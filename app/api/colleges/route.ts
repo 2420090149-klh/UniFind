@@ -1,12 +1,13 @@
 import { NextResponse } from 'next/server';
-import db from '@/lib/db';
+import { prisma } from '@/lib/db';
+import { getUserFromRequest } from '@/lib/auth';
 
 export async function GET() {
     try {
-        const colleges = db.prepare('SELECT * FROM College').all();
+        const colleges = await prisma.college.findMany();
         return NextResponse.json({ colleges });
-    } catch (e) {
-        console.error('API Error:', e);
-        return NextResponse.json({ error: 'Failed' }, { status: 500 });
+    } catch (error) {
+        console.error('Get colleges error:', error);
+        return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
     }
 }
