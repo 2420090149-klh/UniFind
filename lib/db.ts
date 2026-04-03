@@ -1,37 +1,30 @@
-import path from 'path';
-import fs from 'fs';
-const Database = require('better-sqlite3');
+import { PrismaClient } from '@prisma/client';
+import { createClient } from '@libsql/client';
+import { PrismaLibSql } from '@prisma/adapter-libsql';
 
-const dbPath = path.join(process.cwd(), 'unifind.db');
+const url = process.env.TURSO_DATABASE_URL!;
+const authToken = process.env.TURSO_AUTH_TOKEN;
 
-console.log(`[DB] initializing at ${dbPath}`);
-console.log(`[DB] CWD is ${process.cwd()}`);
+const adapter = new PrismaLibSql({
+  url: url,
+  authToken: authToken,
+});
 
-let db: any;
+// PrismaClient is attached to the `global` object in development to prevent
+// exhausting your database connection limit.
+//
+// Learn more: 
+// https://pris.ly/d/help/next-js-best-practices
 
-// Use global object to cache the connection in development
-// to avoid "database is locked" errors on hot reload
-const globalWithDb = global as typeof globalThis & {
-    sqliteDb?: any;
-};
+const globalForPrisma = global as unknown as { prisma: PrismaClient };
 
-if (!globalWithDb.sqliteDb) {
-    try {
-        if (!fs.existsSync(dbPath)) {
-            console.error(`[DB] ERROR: File not found at ${dbPath}`);
-        }
+export const prisma =
+  globalForPrisma.prisma ||
+  new PrismaClient({
+    adapter,
+    log: ['query'],
+  });
 
-        db = new Database(dbPath, {
-            verbose: console.log
-        });
-        db.pragma('journal_mode = WAL');
-        globalWithDb.sqliteDb = db;
-    } catch (e) {
-        console.error('[DB] Failed to open database:', e);
-        throw e;
-    }
-} else {
-    db = globalWithDb.sqliteDb;
-}
+if (process.env.NODE_ENV !== 'production') globalForPrisma.prisma = prisma;
 
-export default db;
+export default prisma;
