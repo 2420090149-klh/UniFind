@@ -1,0 +1,55 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlite"
+}
+
+model User {
+  id        String   @id @default(uuid())
+  email     String   @unique
+  password  String
+  name      String
+  role      String   // "STUDENT", "ADMIN", "SUPER_ADMIN"
+  permissions String? // comma-separated e.g. "MANAGE_USERS,VIEW_ALL_ITEMS"
+  collegeId String
+  college   College  @relation(fields: [collegeId], references: [id])
+  foundItems Item[]  @relation("Finder")
+  lostItems  Item[]  @relation("Owner")
+  resetToken String?
+  resetTokenExpiry DateTime?
+  createdAt DateTime @default(now())
+}
+
+model College {
+  id        String   @id @default(uuid())
+  name      String
+  subdomain String @unique
+  users     User[]
+  items     Item[]
+}
+
+model Item {
+  id            String   @id @default(uuid())
+  title         String
+  description   String
+  category      String
+  dateLost      DateTime
+  locationFloor String?
+  locationRoom  String?
+  imageUrl      String?
+  status        String   @default("REPORTED") // REPORTED, CLAIMED, APPROVED, RETURNED
+  
+  finderId      String?
+  finder        User?    @relation("Finder", fields: [finderId], references: [id])
+  
+  ownerId       String?
+  owner         User?    @relation("Owner", fields: [ownerId], references: [id])
+
+  collegeId     String
+  college       College  @relation(fields: [collegeId], references: [id])
+
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+}
