@@ -47,7 +47,7 @@ export async function POST(req: Request) {
         console.error('Cloudinary upload error:', error);
         return NextResponse.json({ 
             success: false, 
-            error: error.message || 'Failed to upload to cloud storage' 
+            error: error.message || 'Cloudinary upload failed. Check your API credentials.' 
         }, { status: 500 });
     }
 }

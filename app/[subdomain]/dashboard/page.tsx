@@ -97,10 +97,12 @@ export default function Dashboard() {
                 const data = await res.json();
                 setNewItem({ ...newItem, imageUrl: data.url });
             } else {
-                alert('Upload failed');
+                const data = await res.json();
+                alert(`Upload failed: ${data.error || 'Server error'}`);
             }
-        } catch (err) {
+        } catch (err: any) {
             console.error(err);
+            alert(`Network error: ${err.message}`);
         }
     };
 
