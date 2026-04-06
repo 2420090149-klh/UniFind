@@ -5,6 +5,7 @@ import Navbar from '@/components/Navbar';
 import { useParams } from 'next/navigation';
 import { motion, AnimatePresence } from 'framer-motion';
 import * as XLSX from 'xlsx';
+import { uploadToCloudinary } from '@/lib/uploadToCloudinary';
 
 type Item = {
     id: string; title: string; description: string; category: string;
@@ -110,21 +111,14 @@ export default function AdminDashboard() {
 
     const handleFileUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
         if (!e.target.files?.[0]) return;
-        const file = e.target.files[0];
-        const formData = new FormData();
-        formData.append('file', file);
         setUploadLoading(true);
         try {
-            const res = await fetch('/api/upload', { method: 'POST', body: formData });
-            const data = await res.json();
-            if (res.ok && data.url) {
-                setNewItem({ ...newItem, imageUrl: data.url });
-            } else {
-                alert('Upload failed: ' + (data.error || 'Unknown error'));
-            }
-        } catch (err) {
-            console.error(err);
-            alert('Upload failed: network error');
+            const url = await uploadToCloudinary(e.target.files[0]);
+            setNewItem(prev => ({ ...prev, imageUrl: url }));
+        } catch (err: unknown) {
+            const msg = err instanceof Error ? err.message : 'Upload failed';
+            console.error('Upload error:', msg);
+            alert('Upload failed: ' + msg);
         } finally {
             setUploadLoading(false);
         }
