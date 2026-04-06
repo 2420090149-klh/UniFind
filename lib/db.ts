@@ -28,12 +28,12 @@ function createClient(): PrismaClient {
   // eslint-disable-next-line @typescript-eslint/no-require-imports
   const Database = require('better-sqlite3');
   // eslint-disable-next-line @typescript-eslint/no-require-imports
-  const { PrismaBetterSQLite } = require('@prisma/adapter-better-sqlite3');
+  const { PrismaBetterSqlite3 } = require('@prisma/adapter-better-sqlite3');
 
   // Strip file: prefix for better-sqlite3
-  const filePath = dbUrl.replace('file:', '');
+  const filePath = dbUrl.replace('file:./', '').replace('file:', '');
   const database = new Database(filePath);
-  const adapter = new PrismaBetterSQLite(database);
+  const adapter = new PrismaBetterSqlite3(database);
   return new PrismaClient({ adapter });
 }
 
