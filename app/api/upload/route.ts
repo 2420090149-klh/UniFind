@@ -1,12 +1,5 @@
 import { NextResponse } from 'next/server';
-import { v2 as cloudinary } from 'cloudinary';
-
-// Configure Cloudinary
-cloudinary.config({
-    cloud_name: process.env.CLOUDINARY_CLOUD_NAME,
-    api_key: process.env.CLOUDINARY_API_KEY,
-    api_secret: process.env.CLOUDINARY_API_SECRET,
-});
+import crypto from 'crypto';
 
 export async function POST(req: Request) {
     try {
@@ -17,37 +10,61 @@ export async function POST(req: Request) {
             return NextResponse.json({ success: false, error: 'No file uploaded' }, { status: 400 });
         }
 
+        const cloudName = process.env.CLOUDINARY_CLOUD_NAME;
+        const apiKey = process.env.CLOUDINARY_API_KEY;
+        const apiSecret = process.env.CLOUDINARY_API_SECRET;
+
+        if (!cloudName || !apiKey || !apiSecret) {
+            console.error('Cloudinary env vars missing:', { cloudName: !!cloudName, apiKey: !!apiKey, apiSecret: !!apiSecret });
+            return NextResponse.json({ success: false, error: 'Cloudinary not configured on server' }, { status: 500 });
+        }
+
+        // Convert file to base64 data URI
         const bytes = await file.arrayBuffer();
-        const buffer = Buffer.from(bytes);
+        const base64 = Buffer.from(bytes).toString('base64');
+        const dataUri = `data:${file.type};base64,${base64}`;
 
-        console.log(`Uploading file: ${file.name}, size: ${bytes.byteLength} bytes`);
+        // Build signed upload parameters (sorted alphabetically — required by Cloudinary)
+        const timestamp = Math.round(Date.now() / 1000);
+        const folder = 'unifind';
 
-        // Upload to Cloudinary using a Promise wrapper for the upload_stream
-        const result: any = await new Promise((resolve, reject) => {
-            const uploadStream = cloudinary.uploader.upload_stream(
-                {
-                    folder: 'unifind-items',
-                    resource_type: 'auto',
-                },
-                (error, result) => {
-                    if (error) reject(error);
-                    else resolve(result);
-                }
+        // Generate SHA-1 signature using Node.js crypto (works on Vercel)
+        // Format: alphabetically sorted key=value pairs + api_secret (no & before secret)
+        const paramStr = `folder=${folder}&timestamp=${timestamp}`;
+        const sigStr = `${paramStr}${apiSecret}`;
+        const signature = crypto.createHash('sha1').update(sigStr).digest('hex');
+
+        // Upload to Cloudinary using signed upload
+        const formData = new FormData();
+        formData.append('file', dataUri);
+        formData.append('api_key', apiKey);
+        formData.append('timestamp', timestamp.toString());
+        formData.append('folder', folder);
+        formData.append('signature', signature);
+
+        const uploadRes = await fetch(
+            `https://api.cloudinary.com/v1_1/${cloudName}/image/upload`,
+            { method: 'POST', body: formData }
+        );
+
+        const result = await uploadRes.json();
+
+        if (!uploadRes.ok || result.error) {
+            console.error('Cloudinary upload failed:', JSON.stringify(result.error));
+            return NextResponse.json(
+                { success: false, error: result.error?.message || 'Cloudinary upload failed' },
+                { status: 500 }
             );
-            uploadStream.end(buffer);
-        });
+        }
 
-        return NextResponse.json({ 
-            success: true, 
-            url: result.secure_url,
-            public_id: result.public_id 
-        });
+        return NextResponse.json({ success: true, url: result.secure_url });
 
-    } catch (error: any) {
-        console.error('Cloudinary upload error:', error);
-        return NextResponse.json({ 
-            success: false, 
-            error: error.message || 'Cloudinary upload failed. Check your API credentials.' 
-        }, { status: 500 });
+    } catch (error: unknown) {
+        const message = error instanceof Error ? error.message : 'Upload failed';
+        console.error('Upload route error:', message);
+        return NextResponse.json(
+            { success: false, error: message },
+            { status: 500 }
+        );
     }
 }

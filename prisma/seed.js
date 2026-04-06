@@ -1,95 +1,70 @@
-const { createClient } = require('@libsql/client');
+require('dotenv').config();
+const { PrismaClient } = require('@prisma/client');
+const { PrismaBetterSqlite3 } = require('@prisma/adapter-better-sqlite3');
+const Database = require('better-sqlite3');
 const bcrypt = require('bcryptjs');
-const crypto = require('crypto');
+const path = require('path');
 
-// Get credentials from environment
-const url = "https://dheeran-dheeran.aws-ap-south-1.turso.io";
-const authToken = "eyJhbGciOiJFZERTQSIsInR5cCI6IkpXVCJ9.eyJhIjoicnciLCJpYXQiOjE3NzUyMjI3ODUsImlkIjoiMDE5ZDUzODUtZDQwMS03ZWZjLTgwY2YtZDdhY2M5ODM5YmMxIiwicmlkIjoiNThhNmY3NzYtMzZhZC00NTQ4LTk4MDMtY2I5MDNjMjEyZmJmIn0.5KbVdUGf-olXoFqCJvZMy82IDzpGAQQ6INbgBO45ZngtcpCBHd0qKviFBPbuI1rJyO_rXYRHNtos4eAXcsruAg";
+// Prisma v7 requires adapter even for local SQLite
+const dbUrl = process.env.DATABASE_URL || 'file:./unifind.db';
+const filePath = path.resolve(dbUrl.replace('file:', '').replace('./', ''));
 
-const client = createClient({
-  url: url,
-  authToken: authToken,
-});
+console.log('Using database file:', filePath);
+const database = new Database(filePath);
+const adapter = new PrismaBetterSqlite3(database);
+const prisma = new PrismaClient({ adapter });
 
 async function main() {
-    console.log('🌱 Starting Cloud Seed with Raw SQL...');
-    
-    const password = await bcrypt.hash('admin123', 10);
+    console.log('Seeding local SQLite database...');
+
+    const adminPassword = await bcrypt.hash('admin123', 10);
     const superPassword = await bcrypt.hash('Dheeran@15019d', 10);
 
-    // Create Tables if they don't exist
-    console.log('🔍 Creating tables in Turso...');
-    
-    await client.execute(`
-        CREATE TABLE IF NOT EXISTS College (
-            id TEXT PRIMARY KEY,
-            name TEXT NOT NULL,
-            subdomain TEXT UNIQUE NOT NULL
-        )
-    `);
-
-    await client.execute(`
-        CREATE TABLE IF NOT EXISTS User (
-            id TEXT PRIMARY KEY,
-            email TEXT UNIQUE NOT NULL,
-            password TEXT NOT NULL,
-            name TEXT NOT NULL,
-            role TEXT NOT NULL,
-            permissions TEXT,
-            collegeId TEXT NOT NULL,
-            resetToken TEXT,
-            resetTokenExpiry DATETIME,
-            createdAt DATETIME DEFAULT CURRENT_TIMESTAMP,
-            FOREIGN KEY (collegeId) REFERENCES College(id)
-        )
-    `);
-
-    await client.execute(`
-        CREATE TABLE IF NOT EXISTS Item (
-            id TEXT PRIMARY KEY,
-            title TEXT NOT NULL,
-            description TEXT NOT NULL,
-            category TEXT NOT NULL,
-            dateLost DATETIME NOT NULL,
-            locationFloor TEXT,
-            locationRoom TEXT,
-            imageUrl TEXT,
-            status TEXT DEFAULT 'REPORTED',
-            finderId TEXT,
-            ownerId TEXT,
-            collegeId TEXT NOT NULL,
-            createdAt DATETIME DEFAULT CURRENT_TIMESTAMP,
-            updatedAt DATETIME,
-            FOREIGN KEY (finderId) REFERENCES User(id),
-            FOREIGN KEY (ownerId) REFERENCES User(id),
-            FOREIGN KEY (collegeId) REFERENCES College(id)
-        )
-    `);
-
-    console.log('📦 Inserting initial data...');
-
-    // Insert College
-    await client.execute({
-        sql: "INSERT INTO College (id, name, subdomain) VALUES (?, ?, ?) ON CONFLICT(subdomain) DO UPDATE SET name=excluded.name",
-        args: ['college-1', 'KL University', 'klhb']
+    const college = await prisma.college.upsert({
+        where: { subdomain: 'klhb' },
+        update: { name: 'KL University' },
+        create: {
+            id: 'college-1',
+            name: 'KL University',
+            subdomain: 'klhb',
+        },
     });
+    console.log('College:', college.name);
 
-    // Insert Admin
-    await client.execute({
-        sql: "INSERT INTO User (id, email, password, name, role, collegeId) VALUES (?, ?, ?, ?, ?, ?) ON CONFLICT(email) DO UPDATE SET password=excluded.password, role=excluded.role",
-        args: [crypto.randomUUID(), 'admin@klhb.com', password, 'Floor Admin', 'ADMIN', 'college-1']
+    const admin = await prisma.user.upsert({
+        where: { email: 'admin@klhb.com' },
+        update: { password: adminPassword, role: 'ADMIN' },
+        create: {
+            email: 'admin@klhb.com',
+            password: adminPassword,
+            name: 'Floor Admin',
+            role: 'ADMIN',
+            collegeId: college.id,
+        },
     });
+    console.log('Admin:', admin.email);
 
-    // Insert Super Admin
-    await client.execute({
-        sql: "INSERT INTO User (id, email, password, name, role, permissions, collegeId) VALUES (?, ?, ?, ?, ?, ?, ?) ON CONFLICT(email) DO UPDATE SET password=excluded.password, role=excluded.role, permissions=excluded.permissions",
-        args: [crypto.randomUUID(), '2420090149@klh.edu.in', superPassword, 'Main Super Admin', 'SUPER_ADMIN', 'MANAGE_ADMINS,VIEW_ALL_DATA', 'college-1']
+    const superAdmin = await prisma.user.upsert({
+        where: { email: '2420090149@klh.edu.in' },
+        update: { password: superPassword, role: 'SUPER_ADMIN', permissions: 'MANAGE_ADMINS,VIEW_ALL_DATA' },
+        create: {
+            email: '2420090149@klh.edu.in',
+            password: superPassword,
+            name: 'Main Super Admin',
+            role: 'SUPER_ADMIN',
+            permissions: 'MANAGE_ADMINS,VIEW_ALL_DATA',
+            collegeId: college.id,
+        },
     });
-
-    console.log('✅ Turso Database initialized and seeded successfully!');
+    console.log('Super Admin:', superAdmin.email);
+    console.log('Done seeding!');
 }
 
-main().catch((e) => {
-    console.error('❌ Seeding failed:', e);
-    process.exit(1);
-});
+main()
+    .catch((e) => {
+        console.error('SEED FAILED:', e.message);
+        process.exit(1);
+    })
+    .finally(async () => {
+        await prisma.$disconnect();
+    });

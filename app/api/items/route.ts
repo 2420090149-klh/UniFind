@@ -90,7 +90,6 @@ export async function POST(req: Request) {
         });
 
         if (!college) {
-            console.error(`ERROR: College with subdomain "${subdomain}" not found in database.`);
             return NextResponse.json({ error: 'College not found' }, { status: 404 });
         }
 
@@ -113,11 +112,8 @@ export async function POST(req: Request) {
         });
 
         return NextResponse.json({ message: 'Item reported successfully', id: item.id });
-    } catch (error: any) {
+    } catch (error) {
         console.error('Create item error:', error);
-        return NextResponse.json({ 
-            error: 'Internal server error',
-            details: error.message 
-        }, { status: 500 });
+        return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
     }
 }

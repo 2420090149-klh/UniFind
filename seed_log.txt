@@ -1,0 +1,258 @@
+﻿node : C:\Users\Dheeran\OneDrive\D
+esktop\UNIFIND-CAMPUS LOST AND FOU
+ND\unifind\node_modules\@prisma\cl
+ient\runtime\client.js:66
+At line:1 char:1
++ node prisma/seed.js 2>&1 | 
+Out-File -Encoding utf8 
+seed_log.txt; Get- ...
++ ~~~~~~~~~~~~~~~~~~~~~~~~
+    + CategoryInfo          : Not 
+   Specified: (C:\Users\Dheera..  
+  .me\client.js:66:String) [],    
+ RemoteException
+    + FullyQualifiedErrorId : Nat 
+   iveCommandError
+ 
+Read more at https://pris.ly/d/cli
+ent-constructor`),this.name="Prism
+aClientConstructorValidationError"
+}get[Symbol.toStringTag](){return"
+PrismaClientConstructorValidationE
+rror"}};mt(R,"PrismaClientConstruc
+torValidationError");var Nl=["erro
+rFormat","adapter","accelerateUrl"
+,"log","transactionOptions","omit"
+,"comments","__internal"],Dl=["pre
+tty","colorless","minimal"],Fl=["i
+nfo","query","warn","error"],wm={a
+dapter:()=>{},accelerateUrl:e=>{if
+(e!==void 0){if(typeof 
+e!="string")throw new R(`Invalid 
+value ${JSON.stringify(e)} for 
+"accelerateUrl" provided to 
+PrismaClient constructor.`);if(e.t
+rim().length===0)throw new 
+R('"accelerateUrl" provided to 
+PrismaClient constructor must be 
+a non-empty string.')}},errorForma
+t:e=>{if(e){if(typeof 
+e!="string")throw new R(`Invalid 
+value ${JSON.stringify(e)} for 
+"errorFormat" provided to 
+PrismaClient constructor.`);if(!Dl
+.includes(e)){let 
+t=jt(e,Dl);throw new R(`Invalid 
+errorFormat ${e} provided to 
+PrismaClient constructor.${t}`)}}}
+,log:e=>{if(!e)return;if(!Array.is
+Array(e))throw new R(`Invalid 
+value ${JSON.stringify(e)} for 
+"log" provided to PrismaClient 
+constructor.`);function 
+t(r){if(typeof 
+r=="string"&&!Fl.includes(r)){let 
+n=jt(r,Fl);throw new R(`Invalid 
+log level "${r}" provided to 
+PrismaClient 
+constructor.${n}`)}}for(let r of 
+e){t(r);let 
+n={level:t,emit:i=>{let o=["stdout
+","event"];if(!o.includes(i)){let 
+s=jt(i,o);throw new R(`Invalid 
+value ${JSON.stringify(i)} for 
+"emit" in logLevel provided to 
+PrismaClient constructor.${s}`)}}}
+;if(r&&typeof 
+r=="object")for(let[i,o]of Object.
+entries(r))if(n[i])n[i](o);else 
+throw new R(`Invalid property 
+${i} for "log" provided to 
+PrismaClient constructor`)}},trans
+actionOptions:e=>{if(!e)return;let
+ t=e.maxWait;if(t!=null&&t<=0)thro
+w new R(`Invalid value ${t} for 
+maxWait in "transactionOptions" 
+provided to PrismaClient 
+constructor. maxWait needs to be 
+greater than 0`);let r=e.timeout;i
+f(r!=null&&r<=0)throw new 
+R(`Invalid value ${r} for timeout 
+in "transactionOptions" provided 
+to PrismaClient constructor. 
+timeout needs to be greater than 
+0`)},omit:(e,t)=>{if(typeof 
+e!="object")throw new R('"omit" 
+option is expected to be an 
+object.');if(e===null)throw new 
+R('"omit" option can not be 
+`null`');let r=[];for(let[n,i]of 
+Object.entries(e)){let o=Em(n,t.ru
+ntimeDataModel);if(!o){r.push({kin
+d:"UnknownModel",modelKey:n});cont
+inue}for(let[s,a]of 
+Object.entries(i)){let l=o.fields.
+find(u=>u.name===s);if(!l){r.push(
+{kind:"UnknownField",modelKey:n,fi
+eldName:s});continue}if(l.relation
+Name){r.push({kind:"RelationInOmit
+",modelKey:n,fieldName:s});continu
+e}typeof a!="boolean"&&r.push({kin
+d:"InvalidFieldValue",modelKey:n,f
+ieldName:s})}}if(r.length>0)throw 
+new R(Pm(e,r))},comments:e=>{if(e!
+==void 
+0){if(!Array.isArray(e))throw new 
+R(`Invalid value 
+${JSON.stringify(e)} for 
+"comments" provided to 
+PrismaClient constructor. 
+Expected an array of SQL 
+commenter plugins.`);for(let 
+t=0;t<e.length;t++)if(typeof 
+e[t]!="function")throw new 
+R(`Invalid value at index ${t} 
+for "comments" provided to 
+PrismaClient constructor. Each 
+plugin must be a function.`)}},__i
+nternal:e=>{if(!e)return;let t=["d
+ebug","engine","configOverride"];i
+f(typeof e!="object")throw new 
+R(`Invalid value 
+${JSON.stringify(e)} for 
+"__internal" to PrismaClient 
+constructor`);for(let[r]of Object.
+entries(e))if(!t.includes(r)){let 
+n=jt(r,t);throw new R(`Invalid 
+property ${JSON.stringify(r)} for 
+"__internal" provided to 
+PrismaClient 
+constructor.${n}`)}}};function 
+bm(e){let t=e.adapter!==void 
+0,r=e.accelerateUrl!==void 
+0;if(t&&r)throw new R('The 
+"adapter" and "accelerateUrl" 
+options are mutually exclusive. 
+Please provide only one of 
+them.');if(!t&&!r)throw new 
+R('Using engine type "client" 
+requires either "adapter" or 
+"accelerateUrl" to be provided to 
+PrismaClient 
+constructor.')}function 
+Ll(e,t){for(let[r,n]of Object.entr
+ies(e)){if(!Nl.includes(r)){let 
+i=jt(r,Nl);throw new R(`Unknown 
+property ${r} provided to 
+PrismaClient constructor.${i}`)}wm
+[r](n,t)}bm(e)}function 
+jt(e,t){if(t.length===0||typeof 
+e!="string")return"";let 
+r=xm(e,t);return r?` Did you mean 
+"${r}"?`:""}function 
+xm(e,t){if(t.length===0)return 
+null;let r=t.map(i=>({value:i,dist
+ance:(0,_l.default)(e,i)}));r.sort
+((i,o)=>i.distance<o.distance?-1:1
+);let n=r[0];return n.distance<3?n
+.value:null}function 
+Em(e,t){return Ml(t.models,e)??Ml(
+t.types,e)}function Ml(e,t){let r=
+Object.keys(e).find(n=>ue(n)===t);
+if(r)return e[r]}function 
+Pm(e,t){let r=je(e);for(let o of t
+)switch(o.kind){case"UnknownModel"
+:r.arguments.getField(o.modelKey)?
+.markAsError(),r.addErrorMessage((
+)=>`Unknown model name: ${o.modelK
+ey}.`);break;case"UnknownField":r.
+arguments.getDeepField([o.modelKey
+,o.fieldName])?.markAsError(),r.ad
+dErrorMessage(()=>`Model 
+"${o.modelKey}" does not have a 
+field named "${o.fieldName}".`);br
+eak;case"RelationInOmit":r.argumen
+ts.getDeepField([o.modelKey,o.fiel
+dName])?.markAsError(),r.addErrorM
+essage(()=>'Relations are already 
+excluded by default and can not 
+be specified in "omit".');break;ca
+se"InvalidFieldValue":r.arguments.
+getDeepFieldValue([o.modelKey,o.fi
+eldName])?.markAsError(),r.addErro
+rMessage(()=>"Omit field option 
+value must be a boolean.");break}l
+et{message:n,args:i}=sr(r,"colorle
+ss");return`Error validating 
+"omit" option:
+                                  
+                                  
+                                  
+                                  
+                                  
+                                  
+                                  
+                                  
+                                  
+                                  
+                                  
+                                  
+                                  
+                                  
+                                  
+                                  
+                                  
+                                  
+                                  
+                                  
+                                  
+                                  
+                                  
+                                  
+                                  
+                                  
+                                  
+                                  
+                                  
+                                  
+
+PrismaClientConstructorValidationE
+rror: Using engine type "client" 
+requires either "adapter" or 
+"accelerateUrl" to be provided to 
+PrismaClient constructor.
+Read more at https://pris.ly/d/cli
+ent-constructor
+    at bm (C:\Users\Dheeran\OneDri
+ve\Desktop\UNIFIND-CAMPUS LOST 
+AND FOUND\unifind\node_modules\@pr
+isma\client\runtime\client.js:66:3
+615)
+    at Ll (C:\Users\Dheeran\OneDri
+ve\Desktop\UNIFIND-CAMPUS LOST 
+AND FOUND\unifind\node_modules\@pr
+isma\client\runtime\client.js:66:3
+916)
+    at new t (C:\Users\Dheeran\One
+Drive\Desktop\UNIFIND-CAMPUS LOST 
+AND FOUND\unifind\node_modules\@pr
+isma\client\runtime\client.js:70:1
+241)
+    at Object.<anonymous> (C:\User
+s\Dheeran\OneDrive\Desktop\UNIFIND
+-CAMPUS LOST AND 
+FOUND\unifind\prisma\seed.js:6:16)
+    at Module._compile (node:inter
+nal/modules/cjs/loader:1706:14)
+    at Object..js (node:internal/m
+odules/cjs/loader:1839:10)
+    at Module.load (node:internal/
+modules/cjs/loader:1441:32)
+    at Function._load (node:intern
+al/modules/cjs/loader:1263:12)
+    at TracingChannel.traceSync 
+(node:diagnostics_channel:322:14)
+    at wrapModuleLoad (node:intern
+al/modules/cjs/loader:237:24)
+
+Node.js v22.20.0

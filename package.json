@@ -11,12 +11,12 @@
   },
   "dependencies": {
     "@libsql/client": "^0.17.0",
+    "@prisma/adapter-better-sqlite3": "^7.6.0",
     "@prisma/adapter-libsql": "^7.4.1",
     "@prisma/client": "^7.4.0",
     "@react-oauth/google": "^0.13.4",
     "bcryptjs": "^3.0.3",
     "better-sqlite3": "^12.6.2",
-    "cloudinary": "^2.9.0",
     "clsx": "^2.1.1",
     "framer-motion": "^12.34.0",
     "google-auth-library": "^10.6.2",

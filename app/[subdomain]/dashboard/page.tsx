@@ -20,6 +20,7 @@ export default function Dashboard() {
     const [newItem, setNewItem] = useState({
         title: '', description: '', category: 'Electronics', dateLost: '', locationFloor: '', locationRoom: '', imageUrl: ''
     });
+    const [uploadLoading, setUploadLoading] = useState(false);
 
     const fetchItems = async () => {
         setLoading(true);
@@ -86,6 +87,7 @@ export default function Dashboard() {
         const file = e.target.files[0];
         const formData = new FormData();
         formData.append('file', file);
+        setUploadLoading(true);
 
         try {
             const res = await fetch('/api/upload', {
@@ -93,16 +95,17 @@ export default function Dashboard() {
                 body: formData
             });
 
-            if (res.ok) {
-                const data = await res.json();
-                setNewItem({ ...newItem, imageUrl: data.url });
+            const data = await res.json();
+            if (res.ok && data.url) {
+                setNewItem(prev => ({ ...prev, imageUrl: data.url }));
             } else {
-                const data = await res.json();
-                alert(`Upload failed: ${data.error || 'Server error'}`);
+                alert('Upload failed: ' + (data.error || 'Unknown error'));
             }
-        } catch (err: any) {
+        } catch (err) {
             console.error(err);
-            alert(`Network error: ${err.message}`);
+            alert('Upload failed: network error');
+        } finally {
+            setUploadLoading(false);
         }
     };
 
@@ -394,8 +397,9 @@ export default function Dashboard() {
                                 <div>
                                     <label className="block text-xs font-bold text-gray-400 uppercase tracking-wider mb-2">Photo Proof (Required)</label>
                                     <div className="p-4 rounded-xl bg-black/40 border border-white/10 border-dashed flex items-center justify-between">
-                                        <input type="file" accept="image/*" onChange={handleFileUpload} className="text-sm font-medium text-gray-400 file:mr-4 file:py-2.5 file:px-5 file:rounded-lg file:border-0 file:text-xs file:font-extrabold file:uppercase file:tracking-wide file:bg-white/10 file:text-white hover:file:bg-white/20 transition-all cursor-pointer" />
-                                        {newItem.imageUrl && <span className="px-3 py-1 bg-emerald-500/20 text-emerald-400 text-xs font-bold rounded-full">✓ Uploaded</span>}
+                                        <input type="file" accept="image/*" disabled={uploadLoading} onChange={handleFileUpload} className="text-sm font-medium text-gray-400 file:mr-4 file:py-2.5 file:px-5 file:rounded-lg file:border-0 file:text-xs file:font-extrabold file:uppercase file:tracking-wide file:bg-white/10 file:text-white hover:file:bg-white/20 transition-all cursor-pointer disabled:opacity-50" />
+                                        {uploadLoading && <span className="px-3 py-1 bg-indigo-500/20 text-indigo-400 text-xs font-bold rounded-full animate-pulse">Uploading...</span>}
+                                        {!uploadLoading && newItem.imageUrl && <span className="px-3 py-1 bg-emerald-500/20 text-emerald-400 text-xs font-bold rounded-full">✓ Uploaded</span>}
                                     </div>
                                 </div>
                                 <div className="pt-6 flex gap-4">
